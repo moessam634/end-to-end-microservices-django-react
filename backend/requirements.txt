@@ -1,0 +1,50 @@
+# Django Core
+Django>=4.2.0,<5.0.0
+djangorestframework>=3.14.0,<4.0.0
+django-cors-headers>=4.3.0,<5.0.0
+django-environ>=0.11.0,<1.0.0
+
+# Database
+psycopg2-binary>=2.9.0,<3.0.0
+dj-database-url>=2.1.0,<3.0.0
+
+# Admin Interface
+django-jazzmin>=2.6.0,<3.0.0
+
+# AI and ML
+openai>=1.6.1,<2.0.0
+langchain>=0.1.0
+langchain-openai>=0.0.2
+celery==5.3.4
+
+# Task Queue and Caching
+redis>=5.0.0,<6.0.0
+django-redis>=5.4.0,<6.0.0
+
+# Authentication and Security
+djangorestframework-simplejwt>=5.3.0,<6.0.0
+django-allauth>=0.57.0,<1.0.0
+
+# File Handling
+Pillow>=10.0.0,<11.0.0
+django-storages>=1.14.0,<2.0.0
+
+# API Documentation
+drf-spectacular>=0.26.0,<1.0.0
+
+# Filtering and Search
+django-filter>=23.0,<24.0
+
+# Development and Testing
+pytest>=7.4.0,<8.0.0
+pytest-django>=4.7.0,<5.0.0
+factory-boy>=3.3.0,<4.0.0
+
+# Utilities
+python-decouple>=3.8.0,<4.0.0
+requests>=2.31.0,<3.0.0
+beautifulsoup4>=4.12.0,<5.0.0
+lxml>=4.9.0,<5.0.0
+
+# Environment and Configuration
+python-dotenv>=1.0.0,<2.0.0
