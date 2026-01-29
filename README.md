@@ -6,6 +6,10 @@ An AI-powered platform that connects musicians to gigs in real-time using Genera
 
 ![Platform Screenshot](./screenshot.png)
 
+---
+![Arch Diagram](./react-django.png)
+---
+
 ## 🚀 Features
 
  - Microservices Architecture – Modular services for scalability and maintainability
