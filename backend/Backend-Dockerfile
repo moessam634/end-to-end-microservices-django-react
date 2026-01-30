@@ -1,0 +1,34 @@
+FROM python:3.11-slim
+
+# Set environment variables for performance and logging
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Create a user before installing dependencies (layer reuse)
+RUN useradd -m django
+
+WORKDIR /app
+
+# Install build dependencies ONLY when needed, then remove them (Multi-step RUN)
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends gcc libpq-dev build-essential \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies early for cache efficiency
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Cleanup build dependencies to shrink image (since many wheels, like psycopg2-binary, don’t need dev libs at runtime)
+RUN apt-get purge -y --auto-remove gcc libpq-dev build-essential
+
+# Copy Django application code last (to maximize cache for earlier layers)
+COPY . .
+
+# Switch to non-root user for security
+USER django
+
+# Expose the port Django server listens on
+EXPOSE 8000
+
+# Start via Gunicorn with 4 workers
+CMD ["gunicorn", "gig_router.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
