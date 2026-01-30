@@ -1,0 +1,26 @@
+# ---- Build Stage ----
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy dependency declarations first for better Docker cache usage
+COPY package.json package-lock.json* yarn.lock* ./
+RUN npm install
+
+# Copy rest of the code and build your app
+COPY . .
+RUN npm run build
+
+# ---- Production Stage ----
+FROM nginx:alpine
+
+# Copy built static files from build stage to Nginx public dir
+COPY --from=build /app/build /usr/share/nginx/html
+
+# (Optional) Use a custom nginx.conf for React Router support, enable if needed:
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port 80 for the web server
+EXPOSE 80
+
+# Default command to run nginx is already correct
