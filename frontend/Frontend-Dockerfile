@@ -23,4 +23,7 @@ COPY --from=build /app/build /usr/share/nginx/html
 # Expose port 80 for the web server
 EXPOSE 80
 
+# Nginx runs as root by default in official image, but serves content as nginx user
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
 # Default command to run nginx is already correct
