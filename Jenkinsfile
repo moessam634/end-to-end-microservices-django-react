@@ -8,14 +8,11 @@ pipeline {
         booleanParam(name: 'SKIP_SONARQUBE', defaultValue: false, description: 'Skip SonarQube analysis')
     }
     
-    tools {
-        // Configure SonarQube Scanner tool (must be configured in Jenkins Global Tool Configuration)
-        // The tool name 'SonarScanner' should match the configuration in Jenkins
-        // Go to: Manage Jenkins > Global Tool Configuration > SonarQube Scanner
-        // Name: SonarScanner
-        // Install automatically: Yes
-        // Version: Latest
-    }
+    // Note: SonarQube Scanner tool 'SonarScanner' must be configured in Jenkins Global Tool Configuration
+    // Go to: Manage Jenkins > Global Tool Configuration > SonarQube Scanner
+    // Name: SonarScanner (must match the name used in tool 'SonarScanner' call in SonarQube Analysis stage)
+    // Install automatically: Yes
+    // Version: Latest
     
     environment {
         // Application Configuration
@@ -395,12 +392,14 @@ EOF
                         # Check if Trivy is installed
                         if ! command -v trivy &> /dev/null; then
                             echo "Trivy not found. Installing Trivy..."
-                            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-                            echo "deb https://aquasecurity.github.io/trivy-repo/deb \$(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+                            
+                            # Modern installation method using gpg and keyrings
+                            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+                            echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb \$(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
                             sudo apt-get update
                             sudo apt-get install -y trivy || echo "Failed to install Trivy via apt, trying alternative method..."
                             
-                            # Alternative installation method
+                            # Alternative installation method using install script
                             if ! command -v trivy &> /dev/null; then
                                 curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
                             fi

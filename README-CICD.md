@@ -154,7 +154,7 @@ Configure the following credentials in Jenkins:
 2. Find **SonarQube servers** section
 3. Click **Add SonarQube**
 4. Set **Name** to `sonar`
-5. Set **Server URL** to `http://192.168.10.128:9000`
+5. Set **Server URL** to your SonarQube server URL (e.g., `http://<your-sonarqube-server>:9000`)
 6. Select **Server authentication token** credential
 7. Save configuration
 
