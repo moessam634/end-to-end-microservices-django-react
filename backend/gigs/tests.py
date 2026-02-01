@@ -178,24 +178,21 @@ class GigModelTest(TestCase):
     
     def test_gig_ordering(self):
         """Test gig ordering by event_date and created_at"""
-        # Create gigs with different dates
-        past_gig = Gig.objects.create(
-            **self.gig_data,
-            title='Past Gig',
-            event_date=timezone.now() - timedelta(days=10)
-        )
+        # Create a copy of gig_data for modifications
+        past_gig_data = self.gig_data.copy()
+        past_gig_data['title'] = 'Past Gig'
+        past_gig_data['event_date'] = timezone.now() - timedelta(days=10)
+        past_gig = Gig.objects.create(**past_gig_data)
         
-        future_gig = Gig.objects.create(
-            **self.gig_data,
-            title='Future Gig',
-            event_date=timezone.now() + timedelta(days=10)
-        )
+        future_gig_data = self.gig_data.copy()
+        future_gig_data['title'] = 'Future Gig'
+        future_gig_data['event_date'] = timezone.now() + timedelta(days=10)
+        future_gig = Gig.objects.create(**future_gig_data)
         
-        recent_gig = Gig.objects.create(
-            **self.gig_data,
-            title='Recent Gig',
-            event_date=timezone.now() + timedelta(days=5)
-        )
+        recent_gig_data = self.gig_data.copy()
+        recent_gig_data['title'] = 'Recent Gig'
+        recent_gig_data['event_date'] = timezone.now() + timedelta(days=5)
+        recent_gig = Gig.objects.create(**recent_gig_data)
         
         # Test ordering (should be by event_date descending, then created_at descending)
         gigs = list(Gig.objects.all())
