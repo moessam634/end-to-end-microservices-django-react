@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------
 # BUILDER STAGE - Install dependencies
 # -----------------------------------------------------------------------------
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Build arguments
 ARG BUILD_VERSION=dev
@@ -118,4 +118,4 @@ CMD ["gunicorn", "gig_router.wsgi:application", \
      "--access-logfile", "-", \
      "--error-logfile", "-", \
      "--log-level", "info", \
-     "--access-logformat", '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s']
+     "--access-logformat", "%(h)s %(l)s %(u)s %(t)s \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\" %(D)s"]
