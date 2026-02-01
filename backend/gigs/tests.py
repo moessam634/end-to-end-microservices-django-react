@@ -150,30 +150,39 @@ class GigModelTest(TestCase):
         """Test gig status choices"""
         valid_statuses = ['open', 'pending', 'confirmed', 'cancelled', 'completed']
         
+        # Create one gig and update its status instead of creating multiple
+        gig = Gig.objects.create(**self.gig_data)
+        
         for status in valid_statuses:
-            gig = Gig.objects.create(**self.gig_data)
             gig.status = status
             gig.save()
+            gig.refresh_from_db()
             self.assertEqual(gig.status, status)
     
     def test_payment_type_choices(self):
         """Test payment type choices"""
         valid_payment_types = ['per_gig', 'per_hour', 'negotiable']
         
+        # Create one gig and update its payment_type instead of creating multiple
+        gig = Gig.objects.create(**self.gig_data)
+        
         for payment_type in valid_payment_types:
-            gig = Gig.objects.create(**self.gig_data)
             gig.payment_type = payment_type
             gig.save()
+            gig.refresh_from_db()
             self.assertEqual(gig.payment_type, payment_type)
     
     def test_experience_level_choices(self):
         """Test experience level choices"""
         valid_levels = ['beginner', 'intermediate', 'professional']
         
+        # Create one gig and update its experience_level instead of creating multiple
+        gig = Gig.objects.create(**self.gig_data)
+        
         for level in valid_levels:
-            gig = Gig.objects.create(**self.gig_data)
             gig.experience_level = level
             gig.save()
+            gig.refresh_from_db()
             self.assertEqual(gig.experience_level, level)
     
     def test_gig_ordering(self):
@@ -331,10 +340,13 @@ class GigApplicationModelTest(TestCase):
         """Test application status choices"""
         valid_statuses = ['pending', 'accepted', 'rejected', 'withdrawn']
         
+        # Create one application and update its status instead of creating multiple
+        application = GigApplication.objects.create(**self.application_data)
+        
         for status in valid_statuses:
-            application = GigApplication.objects.create(**self.application_data)
             application.status = status
             application.save()
+            application.refresh_from_db()
             self.assertEqual(application.status, status)
     
     def test_application_ordering(self):
