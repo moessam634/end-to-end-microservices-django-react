@@ -1,33 +1,121 @@
-FROM python:3.11-slim
-# Set environment variables for performance and logging
+# =============================================================================
+# Multi-stage Dockerfile for Django Gig Router Backend
+# Stage 1: Build dependencies
+# Stage 2: Runtime image
+# 
+# Current: Optimized for Jenkins CI/CD pipeline
+# Future: Ready for EKS deployment with RDS
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# BUILDER STAGE - Install dependencies
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim as builder
+
+# Build arguments
+ARG BUILD_VERSION=dev
+ARG GIT_COMMIT=unknown
+
+# Set build-time environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
-# Create non-root user
-RUN useradd -m -u 1000 django
+
 WORKDIR /app
-# Install dependencies in a single layer to reduce image size
+
+# Install build dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        gcc \
+        g++ \
+        libpq-dev \
+        build-essential \
+        python3-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python packages
 COPY requirements.txt .
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       gcc \
-       libpq-dev \
-       build-essential \
-    && pip install --no-cache-dir -r requirements.txt \
-    && apt-get purge -y --auto-remove gcc libpq-dev build-essential \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN pip install --user --no-cache-dir -r requirements.txt && \
+    pip install --user --no-cache-dir gunicorn
+
+# -----------------------------------------------------------------------------
+# RUNTIME STAGE - Final lightweight image
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim
+
+# Build arguments (pass through from builder)
+ARG BUILD_VERSION=dev
+ARG GIT_COMMIT=unknown
+
+# Metadata labels
+LABEL maintainer="devops@gigrouter.com" \
+      application="gig-router-backend" \
+      version="${BUILD_VERSION}" \
+      git.commit="${GIT_COMMIT}" \
+      description="AI-powered platform connecting musicians to gigs"
+
+# Set runtime environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PATH=/home/django/.local/bin:$PATH \
+    DJANGO_SETTINGS_MODULE=gig_router.settings \
+    BUILD_VERSION=${BUILD_VERSION} \
+    GIT_COMMIT=${GIT_COMMIT}
+
+# Install runtime dependencies only (no build tools)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libpq5 \
+        postgresql-client \
+        curl \
+        ca-certificates \
+        netcat-openbsd && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create non-root user with specific UID for security
+RUN groupadd -r django -g 1000 && \
+    useradd -r -u 1000 -g django -m -s /bin/bash django
+
+# Set working directory
+WORKDIR /app
+
+# Copy Python packages from builder stage
+COPY --from=builder --chown=django:django /root/.local /home/django/.local
+
 # Copy application code
 COPY --chown=django:django . .
+
+# Create necessary directories with proper permissions
+RUN mkdir -p \
+        /app/staticfiles \
+        /app/media \
+        /app/logs && \
+    chown -R django:django /app
+
 # Switch to non-root user
 USER django
-# Expose port
+
+# Expose application port
 EXPOSE 8000
-# Run with Gunicorn
+
+# Default command - runs Gunicorn with optimal settings
+# Workers calculation: (2 x CPU cores) + 1
+# This can be overridden in Kubernetes deployment or docker-compose
 CMD ["gunicorn", "gig_router.wsgi:application", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "4", \
+     "--threads", "2", \
+     "--worker-class", "gthread", \
+     "--worker-tmp-dir", "/dev/shm", \
      "--timeout", "120", \
+     "--graceful-timeout", "30", \
+     "--keep-alive", "5", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "50", \
      "--access-logfile", "-", \
-     "--error-logfile", "-"]
+     "--error-logfile", "-", \
+     "--log-level", "info", \
+     "--access-logformat", '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s']
